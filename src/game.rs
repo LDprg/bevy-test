@@ -22,17 +22,15 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
     });
 
     commands.spawn(SpriteBundle {
-        texture: asset_server.load("Board.png"),
+        texture: asset_server.load("./img/Board.png"),
         ..default()
     });
 
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("Board.png"),
-        ..default()
-    });
+    let score_bar = asset_server.load("./img/ScoreBar.png");
+    let font_teko = asset_server.load("./font/Teko-SemiBold.ttf");
 
     commands.spawn(SpriteBundle {
-        texture: asset_server.load("ScoreBar.png"),
+        texture: score_bar.clone(),
         sprite: Sprite {
             anchor: Anchor::TopLeft,
             ..default()
@@ -40,13 +38,31 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         transform: Transform::from_xyz(
             -windows.single().width() / 2.,
             windows.single().height() / 2.,
-            0.,
+            1.,
         ),
         ..default()
     });
 
+    commands.spawn(
+        TextBundle::from_section(
+            "0",
+            TextStyle {
+                font: font_teko.clone(),
+                font_size: 49.,
+                color: Color::WHITE,
+            },
+        )
+        .with_text_alignment(TextAlignment::Center)
+        .with_style(Style {
+            position_type: PositionType::Relative,
+            top: Val::Px(0.),
+            left: Val::Px(windows.single().width() / 4.),
+            ..default()
+        }),
+    );
+
     commands.spawn(SpriteBundle {
-        texture: asset_server.load("ScoreBar.png"),
+        texture: score_bar,
         sprite: Sprite {
             anchor: Anchor::TopRight,
             flip_x: true,
@@ -55,8 +71,26 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         transform: Transform::from_xyz(
             windows.single().width() / 2.,
             windows.single().height() / 2.,
-            0.,
+            1.,
         ),
         ..default()
     });
+
+    commands.spawn(
+        TextBundle::from_section(
+            "0",
+            TextStyle {
+                font: font_teko,
+                font_size: 49.,
+                color: Color::WHITE,
+            },
+        )
+        .with_text_alignment(TextAlignment::Center)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(0.),
+            right: Val::Px(windows.single().width() / 4.),
+            ..default()
+        }),
+    );
 }
