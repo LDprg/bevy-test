@@ -1,5 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 
+use crate::WINDOW_HEIGHT;
+
 use super::{AppState, SCOREBAR_HEIGHT};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -35,12 +37,12 @@ fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
     }
 }
 
-fn setup_menu(mut commands: Commands, windows: Query<&Window>, asset_server: Res<AssetServer>) {
+fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     let start_button = commands
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
-                height: Val::Px(windows.single().height() + SCOREBAR_HEIGHT),
+                height: Val::Px(WINDOW_HEIGHT + SCOREBAR_HEIGHT),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -82,7 +84,7 @@ fn setup_menu(mut commands: Commands, windows: Query<&Window>, asset_server: Res
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
-                height: Val::Px(windows.single().height() + SCOREBAR_HEIGHT),
+                height: Val::Px(WINDOW_HEIGHT + SCOREBAR_HEIGHT),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()

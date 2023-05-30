@@ -1,3 +1,5 @@
+use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
+
 use self::play::PlayPlugin;
 use self::{menu::MenuPlugin, play::Player};
 use bevy::{prelude::*, render::camera::ScalingMode, sprite::Anchor};
@@ -40,7 +42,7 @@ impl Plugin for GamePlugin {
     }
 }
 
-fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(Score {
         player1: 0,
         player2: 0,
@@ -48,7 +50,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
 
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scaling_mode: ScalingMode::FixedVertical(windows.single().height()),
+            scaling_mode: ScalingMode::FixedVertical(WINDOW_HEIGHT),
             ..default()
         },
         ..default()
@@ -68,11 +70,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             anchor: Anchor::TopLeft,
             ..default()
         },
-        transform: Transform::from_xyz(
-            -windows.single().width() / 2.,
-            windows.single().height() / 2.,
-            1.,
-        ),
+        transform: Transform::from_xyz(-WINDOW_WIDTH / 2., WINDOW_HEIGHT / 2., 1.),
         ..default()
     });
 
@@ -89,7 +87,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         .with_style(Style {
             position_type: PositionType::Relative,
             top: Val::Px(0.),
-            left: Val::Px(windows.single().width() / 4.),
+            left: Val::Px(WINDOW_WIDTH / 4.),
             ..default()
         }),
         ScoreText(Player::Player1),
@@ -102,11 +100,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             flip_x: true,
             ..default()
         },
-        transform: Transform::from_xyz(
-            windows.single().width() / 2.,
-            windows.single().height() / 2.,
-            1.,
-        ),
+        transform: Transform::from_xyz(WINDOW_WIDTH / 2., WINDOW_HEIGHT / 2., 1.),
         ..default()
     });
 
@@ -123,7 +117,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         .with_style(Style {
             position_type: PositionType::Absolute,
             top: Val::Px(0.),
-            right: Val::Px(windows.single().width() / 4.),
+            right: Val::Px(WINDOW_WIDTH / 4.),
             ..default()
         }),
         ScoreText(Player::Player2),

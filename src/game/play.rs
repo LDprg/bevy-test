@@ -3,6 +3,8 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::*, sprite::Anchor};
 
+use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
+
 use super::{AppState, Score, PADDLE_HEIGHT, PADDLE_WIDTH, SCOREBAR_HEIGHT, SPEED};
 
 const BALL_SPEED: f32 = 400.;
@@ -45,7 +47,7 @@ impl Plugin for PlayPlugin {
     }
 }
 
-fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         SpriteBundle {
             texture: asset_server.load("img/Player.png"),
@@ -55,7 +57,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
                 ..default()
             },
             transform: Transform::from_xyz(
-                PADDLE_WIDTH - windows.single().width() / 2.,
+                PADDLE_WIDTH - WINDOW_WIDTH / 2.,
                 -SCOREBAR_HEIGHT / 2.,
                 1.,
             ),
@@ -73,7 +75,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
                 ..default()
             },
             transform: Transform::from_xyz(
-                -PADDLE_WIDTH + windows.single().width() / 2.,
+                -PADDLE_WIDTH + WINDOW_WIDTH / 2.,
                 -SCOREBAR_HEIGHT / 2.,
                 1.,
             ),
@@ -103,7 +105,6 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
 fn move_paddle(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
-    windows: Query<&Window>,
     mut query: Query<(&mut Transform, &Paddle)>,
 ) {
     for (mut transform, paddle) in query.iter_mut() {
@@ -118,8 +119,8 @@ fn move_paddle(
 
         let translation = transform.translation.y + direction * time.delta_seconds() * SPEED;
         transform.translation.y = translation.clamp(
-            -windows.single().height() / 2. + PADDLE_HEIGHT / 2.,
-            windows.single().height() / 2. - PADDLE_HEIGHT / 2. - SCOREBAR_HEIGHT,
+            -WINDOW_HEIGHT / 2. + PADDLE_HEIGHT / 2.,
+            WINDOW_HEIGHT / 2. - PADDLE_HEIGHT / 2. - SCOREBAR_HEIGHT,
         );
     }
 }
@@ -136,7 +137,6 @@ fn reset_ball(transform: &mut Transform, ball: &mut Ball) {
 
 fn move_ball(
     time: Res<Time>,
-    windows: Query<&Window>,
     mut score: ResMut<Score>,
     mut query: Query<(&mut Transform, &mut Ball), Without<Paddle>>,
     query_paddle: Query<(&Transform, &Paddle), Without<Ball>>,
@@ -153,8 +153,8 @@ fn move_ball(
 
         // Walls y
         let translation_y = translation.y.clamp(
-            -windows.single().height() / 2. + BALL_RADIUS,
-            windows.single().height() / 2. - BALL_RADIUS - SCOREBAR_HEIGHT,
+            -WINDOW_HEIGHT / 2. + BALL_RADIUS,
+            WINDOW_HEIGHT / 2. - BALL_RADIUS - SCOREBAR_HEIGHT,
         );
 
         if translation.y != translation_y {
@@ -162,9 +162,7 @@ fn move_ball(
         }
 
         // Walls x
-        let translation_x = translation
-            .x
-            .max(-windows.single().width() / 2. + BALL_RADIUS);
+        let translation_x = translation.x.max(-WINDOW_WIDTH / 2. + BALL_RADIUS);
 
         if translation.x != translation_x {
             reset_ball(&mut transform, &mut ball);
@@ -172,9 +170,7 @@ fn move_ball(
             continue;
         }
 
-        let translation_x = translation
-            .x
-            .min(windows.single().width() / 2. - BALL_RADIUS);
+        let translation_x = translation.x.min(WINDOW_WIDTH / 2. - BALL_RADIUS);
 
         if translation.x != translation_x {
             reset_ball(&mut transform, &mut ball);
@@ -185,7 +181,7 @@ fn move_ball(
         // Paddles
         let translation_x = translation
             .x
-            .max(-windows.single().width() / 2. + BALL_RADIUS + PADDLE_WIDTH * 2.);
+            .max(-WINDOW_WIDTH / 2. + BALL_RADIUS + PADDLE_WIDTH * 2.);
 
         for (paddle_transform, paddle) in query_paddle.iter() {
             if paddle.0 == Player::Player1
@@ -205,7 +201,7 @@ fn move_ball(
 
         let translation_x = translation
             .x
-            .min(windows.single().width() / 2. - BALL_RADIUS - PADDLE_WIDTH * 2.);
+            .min(WINDOW_WIDTH / 2. - BALL_RADIUS - PADDLE_WIDTH * 2.);
 
         for (paddle_transform, paddle) in query_paddle.iter() {
             if paddle.0 == Player::Player2
@@ -224,8 +220,8 @@ fn move_ball(
 
         // Correct X limits
         let translation_x = translation.x.clamp(
-            -windows.single().width() / 2. + BALL_RADIUS,
-            windows.single().width() / 2. - BALL_RADIUS,
+            -WINDOW_WIDTH / 2. + BALL_RADIUS,
+            WINDOW_WIDTH / 2. - BALL_RADIUS,
         );
 
         transform.translation.y = translation_y;
