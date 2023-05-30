@@ -151,11 +151,8 @@ fn exit_button_system(
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>, With<ExitButton>)>,
 ) {
     for interaction in interaction_query.iter() {
-        match *interaction {
-            Interaction::Clicked => {
-                exit.send(AppExit);
-            }
-            _ => {}
+        if *interaction == Interaction::Clicked {
+            exit.send(AppExit);
         }
     }
 }
@@ -165,11 +162,8 @@ fn start_button_system(
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>, With<StartButton>)>,
 ) {
     for interaction in interaction_query.iter() {
-        match *interaction {
-            Interaction::Clicked => {
-                next_state.set(AppState::InGame);
-            }
-            _ => {}
+        if *interaction == Interaction::Clicked {
+            next_state.set(AppState::InGame);
         }
     }
 }

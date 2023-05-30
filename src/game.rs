@@ -1,5 +1,5 @@
-use self::menu::MenuPlugin;
 use self::play::PlayPlugin;
+use self::{menu::MenuPlugin, play::Player};
 use bevy::{prelude::*, render::camera::ScalingMode, sprite::Anchor};
 
 pub mod menu;
@@ -19,18 +19,33 @@ pub enum AppState {
     InGame,
 }
 
+#[derive(Resource)]
+pub struct Score {
+    player1: u32,
+    player2: u32,
+}
+
+#[derive(Component)]
+pub struct ScoreText(Player);
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
         app.add_plugin(PlayPlugin);
         app.add_plugin(MenuPlugin);
         app.add_state::<AppState>();
+        app.add_systems(Startup, setup);
+        app.add_systems(Update, update_score.run_if(in_state(AppState::InGame)));
     }
 }
 
 fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<AssetServer>) {
+    commands.insert_resource(Score {
+        player1: 0,
+        player2: 0,
+    });
+
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical(windows.single().height()),
@@ -61,7 +76,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         ..default()
     });
 
-    commands.spawn(
+    commands.spawn((
         TextBundle::from_section(
             "0",
             TextStyle {
@@ -77,7 +92,8 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             left: Val::Px(windows.single().width() / 4.),
             ..default()
         }),
-    );
+        ScoreText(Player::Player1),
+    ));
 
     commands.spawn(SpriteBundle {
         texture: score_bar,
@@ -94,7 +110,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         ..default()
     });
 
-    commands.spawn(
+    commands.spawn((
         TextBundle::from_section(
             "0",
             TextStyle {
@@ -110,5 +126,15 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             right: Val::Px(windows.single().width() / 4.),
             ..default()
         }),
-    );
+        ScoreText(Player::Player2),
+    ));
+}
+
+fn update_score(score_glob: Res<Score>, mut query: Query<(&mut Text, &ScoreText)>) {
+    for (mut text, score) in query.iter_mut() {
+        text.sections[0].value = match score.0 {
+            Player::Player1 => score_glob.player1.to_string(),
+            Player::Player2 => score_glob.player2.to_string(),
+        };
+    }
 }
