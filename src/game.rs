@@ -1,14 +1,32 @@
+use self::menu::MenuPlugin;
 use self::play::PlayPlugin;
 use bevy::{prelude::*, render::camera::ScalingMode, sprite::Anchor};
 
+pub mod menu;
 pub mod play;
+
+pub const PADDLE_WIDTH: f32 = 17.;
+pub const PADDLE_HEIGHT: f32 = 120.;
+
+pub const SCOREBAR_HEIGHT: f32 = 47.;
+
+pub const SPEED: f32 = 500.;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum AppState {
+    #[default]
+    Menu,
+    InGame,
+}
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(PlayPlugin);
         app.add_systems(Startup, setup);
+        app.add_plugin(PlayPlugin);
+        app.add_plugin(MenuPlugin);
+        app.add_state::<AppState>();
     }
 }
 
