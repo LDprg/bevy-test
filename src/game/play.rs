@@ -2,6 +2,9 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use super::{AppState, PADDLE_HEIGHT, PADDLE_WIDTH, SCOREBAR_HEIGHT, SPEED};
 
+const BALL_SPEED: f32 = 500.;
+const BALL_RADIUS: f32 = 15.;
+
 #[derive(Debug)]
 enum Player {
     Player1,
@@ -21,7 +24,10 @@ impl Player {
 pub struct Paddle(Player);
 
 #[derive(Component)]
-pub struct Ball;
+pub struct Ball {
+    velocity: f32,
+    direction: Vec2,
+}
 
 pub struct PlayPlugin;
 
@@ -29,6 +35,7 @@ impl Plugin for PlayPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup);
         app.add_systems(Update, move_paddle.run_if(in_state(AppState::InGame)));
+        app.add_systems(Update, move_ball.run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -75,7 +82,10 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             transform: Transform::from_xyz(0., -SCOREBAR_HEIGHT / 2., 1.),
             ..default()
         },
-        Ball,
+        Ball {
+            velocity: BALL_SPEED,
+            direction: Vec2::new(-1., 0.),
+        },
     ));
 }
 
@@ -99,6 +109,22 @@ fn move_paddle(
         transform.translation.y = translation.clamp(
             -windows.single().height() / 2. + PADDLE_HEIGHT / 2.,
             windows.single().height() / 2. - PADDLE_HEIGHT / 2. - SCOREBAR_HEIGHT,
+        );
+    }
+}
+
+fn move_ball(time: Res<Time>, windows: Query<&Window>, mut query: Query<(&mut Transform, &Ball)>) {
+    for (mut transform, ball) in query.iter_mut() {
+        transform.translation += (ball.direction * ball.velocity * time.delta_seconds()).extend(0.);
+
+        transform.translation.y = transform.translation.y.clamp(
+            -windows.single().height() / 2. + BALL_RADIUS,
+            windows.single().height() / 2. - BALL_RADIUS - SCOREBAR_HEIGHT,
+        );
+
+        transform.translation.x = transform.translation.x.clamp(
+            -windows.single().width() / 2. + BALL_RADIUS,
+            windows.single().width() / 2. - BALL_RADIUS,
         );
     }
 }

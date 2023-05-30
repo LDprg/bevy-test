@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{app::AppExit, prelude::*};
 
 use super::{AppState, SCOREBAR_HEIGHT};
 
@@ -12,17 +12,31 @@ struct StartButton;
 #[derive(Component)]
 struct ExitButton;
 
+#[derive(Resource)]
+struct MenuData {
+    button_entitys: [Entity; 2],
+}
+
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::Menu), setup_menu);
+        app.add_systems(OnExit(AppState::Menu), cleanup_menu);
         app.add_systems(Update, button_system.run_if(in_state(AppState::Menu)));
+        app.add_systems(Update, start_button_system.run_if(in_state(AppState::Menu)));
+        app.add_systems(Update, exit_button_system.run_if(in_state(AppState::Menu)));
+    }
+}
+
+fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
+    for &entity in menu_data.button_entitys.iter() {
+        commands.entity(entity).despawn_recursive();
     }
 }
 
 fn setup_menu(mut commands: Commands, windows: Query<&Window>, asset_server: Res<AssetServer>) {
-    commands
+    let start_button = commands
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
@@ -61,9 +75,10 @@ fn setup_menu(mut commands: Commands, windows: Query<&Window>, asset_server: Res
                         },
                     ));
                 });
-        });
+        })
+        .id();
 
-    commands
+    let exit_button = commands
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
@@ -102,7 +117,12 @@ fn setup_menu(mut commands: Commands, windows: Query<&Window>, asset_server: Res
                         },
                     ));
                 });
-        });
+        })
+        .id();
+
+    commands.insert_resource(MenuData {
+        button_entitys: [start_button, exit_button],
+    });
 }
 
 fn button_system(
@@ -122,6 +142,34 @@ fn button_system(
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
             }
+        }
+    }
+}
+
+fn exit_button_system(
+    mut exit: EventWriter<AppExit>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>, With<ExitButton>)>,
+) {
+    for interaction in interaction_query.iter() {
+        match *interaction {
+            Interaction::Clicked => {
+                exit.send(AppExit);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn start_button_system(
+    mut next_state: ResMut<NextState<AppState>>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>, With<StartButton>)>,
+) {
+    for interaction in interaction_query.iter() {
+        match *interaction {
+            Interaction::Clicked => {
+                next_state.set(AppState::InGame);
+            }
+            _ => {}
         }
     }
 }
