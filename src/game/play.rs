@@ -5,7 +5,8 @@ use bevy::{prelude::*, sprite::Anchor};
 
 use super::{AppState, Score, PADDLE_HEIGHT, PADDLE_WIDTH, SCOREBAR_HEIGHT, SPEED};
 
-const BALL_SPEED: f32 = 500.;
+const BALL_SPEED: f32 = 400.;
+const BALL_ACCELERATION: f32 = 4.;
 const BALL_RADIUS: f32 = 15.;
 
 const BALL_START: Vec3 = Vec3::new(0., -SCOREBAR_HEIGHT / 2., 1.);
@@ -82,8 +83,9 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
     ));
 
     let mut ball_direction =
-        Vec2::from_angle(rand::thread_rng().gen_range(PI / 4...PI * 3. / 4.)).rotate(Vec2::Y);
+        Vec2::from_angle(rand::thread_rng().gen_range(PI / 8.0..PI * 3. / 8.)).rotate(Vec2::Y);
     ball_direction.x *= rand::thread_rng().gen_bool(0.5) as i32 as f32 * -2. + 1.;
+    ball_direction.y *= rand::thread_rng().gen_bool(0.5) as i32 as f32 * -2. + 1.;
 
     commands.spawn((
         SpriteBundle {
@@ -96,11 +98,6 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
             direction: ball_direction,
         },
     ));
-
-    println!(
-        "{:?}",
-        Vec2::from_angle(rand::thread_rng().gen_range(0. ..=PI * 2.))
-    );
 }
 
 fn move_paddle(
@@ -130,9 +127,11 @@ fn move_paddle(
 fn reset_ball(transform: &mut Transform, ball: &mut Ball) {
     transform.translation = BALL_START;
     ball.direction =
-        Vec2::from_angle(rand::thread_rng().gen_range(PI / 8...PI * 3. / 8.)).rotate(Vec2::Y);
+        Vec2::from_angle(rand::thread_rng().gen_range(PI / 8.0..PI * 3. / 8.)).rotate(Vec2::Y);
     ball.direction.x *= rand::thread_rng().gen_bool(0.5) as i32 as f32 * -2. + 1.;
     ball.direction.y *= rand::thread_rng().gen_bool(0.5) as i32 as f32 * -2. + 1.;
+
+    ball.velocity = BALL_SPEED;
 }
 
 fn move_ball(
@@ -146,6 +145,8 @@ fn move_ball(
         ball.direction.x += rand::thread_rng().gen_range(-0.01..0.01);
         ball.direction.y += rand::thread_rng().gen_range(-0.01..0.01);
         ball.direction = ball.direction.normalize();
+
+        ball.velocity += BALL_ACCELERATION * time.delta_seconds();
 
         let mut translation = transform.translation
             + (ball.direction * ball.velocity * time.delta_seconds()).extend(0.);
