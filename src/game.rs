@@ -16,8 +16,8 @@ pub const SPEED: f32 = 500.;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
-    Menu,
     #[default]
+    Menu,
     InGame,
 }
 
@@ -34,11 +34,12 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup);
         app.add_plugin(PlayPlugin);
         app.add_plugin(MenuPlugin);
         app.add_state::<AppState>();
-        app.add_systems(Startup, setup);
         app.add_systems(Update, update_score.run_if(in_state(AppState::InGame)));
+        app.add_systems(Update, update_font_size);
     }
 }
 
@@ -50,7 +51,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scaling_mode: ScalingMode::FixedVertical(WINDOW_HEIGHT),
+            scale: 1.,
+            scaling_mode: ScalingMode::Fixed{
+                height: WINDOW_HEIGHT,
+                width: WINDOW_WIDTH,
+            },
             ..default()
         },
         ..default()
@@ -130,5 +135,16 @@ fn update_score(score_glob: Res<Score>, mut query: Query<(&mut Text, &ScoreText)
             Player::Player1 => score_glob.player1.to_string(),
             Player::Player2 => score_glob.player2.to_string(),
         };
+    }
+}
+
+fn update_font_size(mut query: Query<(&mut Text, &ScoreText, &mut Style)>, windows: Query<&Window>) {
+    for (mut text, score, mut style) in query.iter_mut() {
+        text.sections[0].style.font_size = 49. * ((windows.single().resolution.width()/WINDOW_WIDTH)+(windows.single().resolution.height()/WINDOW_HEIGHT))/2.;
+        
+        match score.0 {
+            Player::Player1 => style.left = Val::Px(windows.single().resolution.width() / 4.),
+            Player::Player2 => style.right = Val::Px(windows.single().resolution.height() / 4.),
+        }
     }
 }

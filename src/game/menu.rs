@@ -1,12 +1,15 @@
 use bevy::{app::AppExit, prelude::*};
 
-use crate::WINDOW_HEIGHT;
+use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
 
-use super::{AppState, SCOREBAR_HEIGHT};
+use super::{AppState, SCOREBAR_HEIGHT, ScoreText};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.8, 0.15, 0.6);
+
+const BUTTON_WIDTH: f32 = 200.;
+const BUTTON_HEIGHT: f32 = 50.;
 
 #[derive(Component)]
 struct StartButton;
@@ -28,6 +31,8 @@ impl Plugin for MenuPlugin {
         app.add_systems(Update, button_system.run_if(in_state(AppState::Menu)));
         app.add_systems(Update, start_button_system.run_if(in_state(AppState::Menu)));
         app.add_systems(Update, exit_button_system.run_if(in_state(AppState::Menu)));
+        app.add_systems(Update, update_rescale.run_if(in_state(AppState::Menu)));
+        app.add_systems(Update, update_rescale_text.run_if(in_state(AppState::Menu)));
     }
 }
 
@@ -42,7 +47,7 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
-                height: Val::Px(WINDOW_HEIGHT + SCOREBAR_HEIGHT),
+                height: Val::Percent(100. * (1. + SCOREBAR_HEIGHT/WINDOW_HEIGHT)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -54,8 +59,8 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .spawn((
                     ButtonBundle {
                         style: Style {
-                            width: Val::Px(150.),
-                            height: Val::Px(65.),
+                            width: Val::Px(BUTTON_WIDTH),
+                            height: Val::Px(BUTTON_HEIGHT),
                             // horizontally center child text
                             justify_content: JustifyContent::Center,
                             // vertically center child text
@@ -84,7 +89,7 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn(NodeBundle {
             style: Style {
                 width: Val::Percent(100.),
-                height: Val::Px(WINDOW_HEIGHT + SCOREBAR_HEIGHT),
+                height: Val::Percent(100. * (1. + SCOREBAR_HEIGHT/WINDOW_HEIGHT)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -96,8 +101,8 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .spawn((
                     ButtonBundle {
                         style: Style {
-                            width: Val::Px(150.),
-                            height: Val::Px(65.),
+                            width: Val::Px(BUTTON_WIDTH),
+                            height: Val::Px(BUTTON_HEIGHT),
                             // horizontally center child text
                             justify_content: JustifyContent::Center,
                             // vertically center child text
@@ -167,5 +172,18 @@ fn start_button_system(
         if *interaction == Interaction::Clicked {
             next_state.set(AppState::InGame);
         }
+    }
+}
+
+fn update_rescale(mut query: Query<&mut Style, With<Button>>, windows: Query<&Window>) {
+    for mut style in query.iter_mut() {
+        style.width = Val::Px(BUTTON_WIDTH * windows.iter().next().unwrap().width() / WINDOW_WIDTH);
+        style.height = Val::Px(BUTTON_HEIGHT * windows.iter().next().unwrap().height() / WINDOW_HEIGHT);
+    }
+}
+
+fn update_rescale_text(mut query: Query<&mut Text, Without<ScoreText>>, windows: Query<&Window>) {
+    for mut text in query.iter_mut() {
+        text.sections[0].style.font_size = 40. * windows.iter().next().unwrap().width() / WINDOW_WIDTH;
     }
 }
