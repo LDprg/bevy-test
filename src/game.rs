@@ -14,8 +14,8 @@ pub const SPEED: f32 = 500.;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
-    #[default]
     Menu,
+    #[default]
     InGame,
 }
 

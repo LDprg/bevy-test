@@ -84,7 +84,7 @@ fn setup(mut commands: Commands, windows: Query<&Window>, asset_server: Res<Asse
         },
         Ball {
             velocity: BALL_SPEED,
-            direction: Vec2::new(-1., 0.),
+            direction: Vec2::new(0.5, 0.2),
         },
     ));
 }
@@ -113,18 +113,34 @@ fn move_paddle(
     }
 }
 
-fn move_ball(time: Res<Time>, windows: Query<&Window>, mut query: Query<(&mut Transform, &Ball)>) {
-    for (mut transform, ball) in query.iter_mut() {
-        transform.translation += (ball.direction * ball.velocity * time.delta_seconds()).extend(0.);
+fn move_ball(
+    time: Res<Time>,
+    windows: Query<&Window>,
+    mut query: Query<(&mut Transform, &mut Ball)>,
+) {
+    for (mut transform, mut ball) in query.iter_mut() {
+        let translation = transform.translation
+            + (ball.direction * ball.velocity * time.delta_seconds()).extend(0.);
 
-        transform.translation.y = transform.translation.y.clamp(
+        let translation_y = translation.y.clamp(
             -windows.single().height() / 2. + BALL_RADIUS,
             windows.single().height() / 2. - BALL_RADIUS - SCOREBAR_HEIGHT,
         );
 
-        transform.translation.x = transform.translation.x.clamp(
+        let translation_x = translation.x.clamp(
             -windows.single().width() / 2. + BALL_RADIUS,
             windows.single().width() / 2. - BALL_RADIUS,
         );
+
+        if translation.y != translation_y {
+            ball.direction.y *= -1.;
+            println!("hit y");
+        }
+        if translation.x != translation_x {
+            ball.direction.x *= -1.;
+            println!("hit x");
+        }
+        transform.translation.y = translation_y;
+        transform.translation.x = translation_x;
     }
 }
